@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type Wisdom struct {
@@ -15,6 +17,7 @@ type Wisdom struct {
 
 func WisdomGetter(w http.ResponseWriter, r *http.Request) {
 
+	GetWisdomByID(w, r)
 	rows, err := db.Query("SELECT * FROM wisdom")
 	if err != nil {
 		panic(err)
@@ -31,6 +34,25 @@ func WisdomGetter(w http.ResponseWriter, r *http.Request) {
 		}
 		print("Source is: ", source, "\nWisdom is: ", wisdom, "\n", "Date is: ", date, "\n")
 	}
+
+}
+
+func GetWisdomByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["WisdomID"]
+
+	myWisdom := Wisdom{}
+
+	rows, err := db.Query(fmt.Sprintf("SELECT * FROM wisdom WHERE id == %v;", id))
+	if err != nil {
+		panic(err)
+	}
+
+	var wisID int
+	err = rows.Scan(&wisID, &myWisdom.Source, &myWisdom.Datetime)
+
+	b, err := json.Marshal(myWisdom)
+	w.Body = b
 
 }
 

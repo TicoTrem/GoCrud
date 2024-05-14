@@ -40,6 +40,7 @@ func main() {
 	router.HandleFunc("/", HomeHandler)
 	router.HandleFunc("/Wisdom", WisdomPoster).Methods("POST")
 	router.HandleFunc("/Wisdom", WisdomGetter).Methods("GET")
+	router.HandleFunc("/Wisdom/{WisdomID}", GetWisdomByID).Methods("GET")
 
 	// Start the server after all routes are configured
 	http.ListenAndServe(":3000", router)
