@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -17,7 +18,7 @@ type Wisdom struct {
 
 func WisdomGetter(w http.ResponseWriter, r *http.Request) {
 
-	GetWisdomByID(w, r)
+	// GetWisdomByID(w, r)
 	rows, err := db.Query("SELECT * FROM wisdom")
 	if err != nil {
 		panic(err)
@@ -25,14 +26,14 @@ func WisdomGetter(w http.ResponseWriter, r *http.Request) {
 
 	var id int
 	var source string
-	var wisdom string
+	var myWisdom string
 	var date string
 	for rows.Next() {
-		err = rows.Scan(&id, &source, &wisdom, &date)
+		err = rows.Scan(&id, &source, &myWisdom, &date)
 		if err != nil {
 			panic(err)
 		}
-		print("Source is: ", source, "\nWisdom is: ", wisdom, "\n", "Date is: ", date, "\n")
+		print("Source is: ", source, "\nWisdom is: ", myWisdom, "\n", "Date is: ", date, "\n")
 	}
 
 }
@@ -43,16 +44,32 @@ func GetWisdomByID(w http.ResponseWriter, r *http.Request) {
 
 	myWisdom := Wisdom{}
 
-	rows, err := db.Query(fmt.Sprintf("SELECT * FROM wisdom WHERE id == %v;", id))
+	var myQuery string = fmt.Sprintf("SELECT * FROM wisdom WHERE id = %v;", id)
+	print(myQuery)
+	rows, err := db.Query(myQuery)
+
 	if err != nil {
 		panic(err)
 	}
 
 	var wisID int
-	err = rows.Scan(&wisID, &myWisdom.Source, &myWisdom.Datetime)
+	if rows.Next() {
+		err = rows.Scan(&wisID, &myWisdom.Wisdom, &myWisdom.Source, &myWisdom.Datetime)
+	} else {
+		log.Fatal("There were no rows returned for that ID")
+	}
+
+	if err != nil {
+		panic("rows.Scan failed in GetWisdomByID:\n" + err.Error())
+	}
 
 	b, err := json.Marshal(myWisdom)
-	w.Body = b
+
+	if err != nil {
+		panic("json.Marshal did not workkk:\n" + err.Error())
+	}
+	fmt.Println(b)
+	w.Write(b)
 
 }
 

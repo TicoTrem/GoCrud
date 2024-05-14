@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -12,13 +13,15 @@ import (
 
 var db *sql.DB
 
-type Wisdom struct {
-	Source   string
-	Wisdom   string
-	Datetime string
-}
-
 func main() {
+
+	// run after main to catch any panics
+	// panics go up the call stack until they find a deferred recover function
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		fmt.Println("A fatal error has occurred")
+	// 	}
+	// }()
 
 	currentTime := time.Now().Format("2006-01-02 15:04:05")
 	fmt.Println("Current date and time:", currentTime)
@@ -28,8 +31,13 @@ func main() {
 	var err error
 	db, err = sql.Open("mysql", "root:password@tcp(127.0.0.1)/WisdomDB")
 	if err != nil {
-		panic(err)
+		panic("Failed to open the DataBase")
 	}
+
+	if err := db.Ping(); err != nil {
+		log.Fatal("The database is not accessible")
+	}
+
 	defer db.Close()
 
 	db.SetConnMaxLifetime(time.Minute * 3)
